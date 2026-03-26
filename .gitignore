@@ -13,3 +13,6 @@ build/
 # OS / Editor files
 .DS_Store
 .vscode/
+
+node_modules
+.env
