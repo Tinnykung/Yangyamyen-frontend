@@ -52,7 +52,7 @@ export function Root() {
                   className="w-16 h-16 md:w-20 md:h-20 object-contain rounded"
                 />
               </div>
-              <span className="text-base md:text-xl font-semibold text-neutral-900 group-hover:text-amber-700 transition-colors duration-300">
+              <span className="hidden md:block text-base md:text-xl font-semibold text-neutral-900 group-hover:text-amber-700 transition-colors duration-300">
                 ย่างยามเย็น-304
               </span>
             </Link>
