@@ -49,7 +49,7 @@ export function Root() {
                 <ImageWithFallback 
                   src="https://scontent.fbkk5-4.fna.fbcdn.net/v/t39.30808-6/619258884_5171381759753893_6892651003205238714_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=1d70fc&_nc_ohc=jts7BNSON4oQ7kNvwHH8epC&_nc_oc=AdrDAgfQSkN7YGA8rzWIR9v11lwgZRPkG6SPIoGDDk4BpjwmhiLkjSzvDsdHxtNu_dKs5UqynBfeMh8m-eceX6XD&_nc_zt=23&_nc_ht=scontent.fbkk5-4.fna&_nc_gid=65miqv6DmQOV97m3Jx3eww&_nc_ss=7a32e&oh=00_AfzcIpgAXAvtIa5NVf156JREGS42cjK63Ov_5vmHksAkng&oe=69C81B76"
                   alt="ย่างยามเย็น-304 Logo" 
-                  className="w-20 h-20 object-contain rounded"
+                  className="w-16 h-16 md:w-20 md:h-20 object-contain rounded"
                 />
               </div>
               <span className="text-base md:text-xl font-semibold text-neutral-900 group-hover:text-amber-700 transition-colors duration-300">
