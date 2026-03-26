@@ -9,7 +9,7 @@ export function Root() {
   const cartCount = getCartCount();
 
   // ใส่ลิงก์รูปภาพพื้นหลังตรงนี้
-  const backgroundImage = "654748065_122114432403236814_8283769321234183639_n.jpg";
+  const backgroundImage = "/654748065_122114432403236814_8283769321234183639_n.jpg";
 
   return (
     // คงพื้นหลังสีสว่างดั้งเดิมไว้
