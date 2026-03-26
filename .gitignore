@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+
+# Production build
+dist/
+build/
+
+# Environment Variables (ห้ามเอาขึ้น Git เด็ดขาด)
+.env
+.env.*
+!.env.example
+
+# OS / Editor files
+.DS_Store
+.vscode/
