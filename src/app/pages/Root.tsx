@@ -52,7 +52,7 @@ export function Root() {
                   className="w-20 h-20 object-contain rounded"
                 />
               </div>
-              <span className="text-xl font-semibold text-neutral-900 group-hover:text-amber-700 transition-colors duration-300">
+              <span className="text-base md:text-xl font-semibold text-neutral-900 group-hover:text-amber-700 transition-colors duration-300">
                 ย่างยามเย็น-304
               </span>
             </Link>
@@ -60,17 +60,17 @@ export function Root() {
             <nav className="flex items-center gap-6">
               <Link
                 to="/"
-                className={`text-xl transition-all duration-300 hover:-translate-y-1 ${
+                className={`text-base md:text-xl transition-all duration-300 hover:-translate-y-1 ${
                   location.pathname === '/'
-                    ? 'text-amber-700 font-bold'
-                    : 'text-neutral-600 hover:text-neutral-900'
+                    ? 'text-amber-500 font-bold'
+                    : 'text-neutral-400 hover:text-neutral-900'
                 }`}
               >
                 เมนู
               </Link>
               <Link
                 to="/tracking"
-                className={`text-xl transition-all duration-300 hover:-translate-y-1 ${
+                className={`text-base md:text-xl transition-all duration-300 hover:-translate-y-1 ${
                   location.pathname === '/tracking'
                     ? 'text-amber-500 font-bold'
                     : 'text-neutral-400 hover:text-neutral-900'
@@ -80,7 +80,7 @@ export function Root() {
               </Link>
               <Link
                 to="/cart"
-                className="relative flex items-center gap-2 text-neutral-600 hover:text-amber-700 transition-all duration-300 hover:scale-110"
+                className="relative flex items-center text-neutral-600 hover:text-amber-700 transition-all duration-300 hover:scale-110"
               >
                 <ShoppingCart className="w-8 h-8" />
                 {cartCount > 0 && (
