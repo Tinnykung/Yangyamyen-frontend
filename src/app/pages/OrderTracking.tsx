@@ -88,19 +88,22 @@ export function OrderTracking() {
     }
   };
 
-  // 1. คำนวณยอดรวมทั้งหมด (Grand Total)
-  const grandTotalQuantity = activeOrders.reduce((total, order) => {
+  // --- ส่วนคำนวณ: กรองเอาเฉพาะออเดอร์ที่ "ไม่ได้ถูกยกเลิก" มาคิดเงิน ---
+  const validOrders = activeOrders.filter(order => order.status !== 'cancelled');
+
+  // 1. คำนวณยอดรวมทั้งหมด (Grand Total) จากออเดอร์ที่ยังปกติอยู่
+  const grandTotalQuantity = validOrders.reduce((total, order) => {
     const orderQuantity = order.items?.reduce((sum, item) => sum + (item.quantity || 1), 0) || 0;
     return total + orderQuantity;
   }, 0);
 
-  const grandTotalPrice = activeOrders.reduce((total, order) => {
+  const grandTotalPrice = validOrders.reduce((total, order) => {
     const orderPrice = order.items?.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0) || 0;
     return total + orderPrice;
   }, 0);
 
-  // 2. จัดกลุ่มรายการอาหารที่ซ้ำกันจากทุกรอบเข้าด้วยกัน
-  const orderSummary = activeOrders.reduce((acc, order) => {
+  // 2. จัดกลุ่มรายการอาหารที่ซ้ำกันจากทุกรอบเข้าด้วยกัน (เฉพาะที่ยังปกติ)
+  const orderSummary = validOrders.reduce((acc, order) => {
     order.items?.forEach(item => {
       const key = item.name;
       if (!acc[key]) {
@@ -177,20 +180,19 @@ export function OrderTracking() {
             </h2>
             <p className="text-center text-neutral-500 mb-8">มีทั้งหมด {activeOrders.length} รอบที่กำลังดำเนินการ</p>
 
-            {/* 📋 รายการสรุปอาหารทั้งหมด + ยอดรวม (จบในกล่องเดียว) */}
-            {summaryList.length > 0 && (
+            {/* 📋 รายการสรุปอาหารทั้งหมด + ยอดรวม (แสดงเฉพาะที่ยังไม่โดนยกเลิก) */}
+            {summaryList.length > 0 ? (
               <div className="bg-amber-50 rounded-2xl p-5 sm:p-7 mb-10 border border-amber-100 shadow-sm">
                 <h4 className="text-lg font-bold text-neutral-800 mb-4 flex items-center gap-2 border-b border-amber-200 pb-3">
                   <ClipboardList size={22} className="text-amber-600" />
                   สรุปรายการอาหารทั้งหมด
                 </h4>
                 
-                {/* ลิสต์รายการอาหาร */}
                 <ul className="space-y-3 mb-6">
                   {summaryList.map((item, idx) => (
                     <li key={idx} className="flex justify-between items-center text-sm sm:text-base border-b border-amber-100/50 pb-2 last:border-0 last:pb-0">
                       <div className="flex items-center gap-3">
-                        <span className="text-center ">
+                        <span className="text-center text-amber-600 font-semibold w-6">
                           {item.quantity}x
                         </span>
                         <span className="text-neutral-700 font-medium">{item.name}</span>
@@ -202,7 +204,6 @@ export function OrderTracking() {
                   ))}
                 </ul>
 
-                {/* แถบสรุปยอดสุทธิด้านล่างของกล่อง */}
                 <div className="bg-white rounded-xl p-4 flex flex-col sm:flex-row justify-between items-center gap-2 border border-amber-200/60 shadow-sm">
                   <div className="text-neutral-600 font-medium">
                     รวมทั้งหมด <span className="font-bold text-amber-600 text-lg">{grandTotalQuantity}</span> รายการ
@@ -212,9 +213,13 @@ export function OrderTracking() {
                   </div>
                 </div>
               </div>
+            ) : (
+              // กรณีที่ทุกออเดอร์ถูกยกเลิกหมดเลย
+              <div className="bg-red-50 text-red-600 p-6 rounded-2xl text-center font-bold mb-10 border border-red-100">
+                รายการอาหารทั้งหมดของโต๊ะนี้ถูกยกเลิกแล้วครับ
+              </div>
             )}
             
-            {/* เส้นคั่นแบ่งระหว่างสรุปรวม กับ รายละเอียดแต่ละรอบ */}
             <div className="relative flex py-5 items-center">
               <div className="flex-grow border-t border-neutral-200"></div>
               <span className="flex-shrink-0 mx-4 text-neutral-400 text-sm font-medium">รายละเอียดสถานะแต่ละรอบ</span>
@@ -224,10 +229,10 @@ export function OrderTracking() {
             {/* 🔄 ลูปแสดงสถานะของแต่ละออเดอร์ (แยกตามรอบ) */}
             <div className="space-y-12 mt-6">
               {activeOrders.map((order, index) => (
-                <div key={order.id} className="relative pb-8 border-b border-neutral-100 last:border-0 last:pb-0">
+                <div key={order.id} className={`relative pb-8 border-b border-neutral-100 last:border-0 last:pb-0 ${order.status === 'cancelled' ? 'opacity-70' : ''}`}>
                   
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="bg-neutral-100 text-neutral-700 font-bold px-4 py-1.5 rounded-full text-sm">
+                    <div className={`font-bold px-4 py-1.5 rounded-full text-sm ${order.status === 'cancelled' ? 'bg-red-100 text-red-700' : 'bg-neutral-100 text-neutral-700'}`}>
                       รอบที่ {index + 1}
                     </div>
                     <div className="flex items-center gap-1 text-neutral-400 text-sm">
@@ -236,19 +241,26 @@ export function OrderTracking() {
                     </div>
                   </div>
 
-                  <OrderStatusTracker status={order.status} />
+                  {/* ถ้าออเดอร์โดนยกเลิก ให้แสดงป้ายสีแดงแทน Tracker เดิม */}
+                  {order.status === 'cancelled' ? (
+                    <div className="bg-red-50 text-red-600 p-4 rounded-xl text-center font-bold mb-4 border border-red-200">
+                      ออเดอร์นี้ถูกยกเลิกแล้ว ❌
+                    </div>
+                  ) : (
+                    <OrderStatusTracker status={order.status} />
+                  )}
 
                   {/* กล่องแสดงรายการอาหารของรอบย่อย */}
                   {order.items && order.items.length > 0 && (
-                    <div className="mt-8 bg-neutral-50/50 rounded-xl p-4 border border-neutral-100">
-                      <h4 className="text-xs font-bold text-neutral-500 mb-3 flex items-center gap-2">
-                        <Utensils size={14} /> รายการอาหาร
+                    <div className={`mt-8 rounded-xl p-4 border ${order.status === 'cancelled' ? 'bg-red-50/50 border-red-100' : 'bg-neutral-50/50 border-neutral-100'}`}>
+                      <h4 className={`text-xs font-bold mb-3 flex items-center gap-2 ${order.status === 'cancelled' ? 'text-red-500' : 'text-neutral-500'}`}>
+                        <Utensils size={14} /> รายการอาหาร {order.status === 'cancelled' && '(ยกเลิก)'}
                       </h4>
                       <ul className="space-y-2">
                         {order.items.map((item, idx) => (
-                          <li key={idx} className="flex justify-between items-center text-sm text-neutral-600">
+                          <li key={idx} className={`flex justify-between items-center text-sm ${order.status === 'cancelled' ? 'text-red-400 line-through' : 'text-neutral-600'}`}>
                             <div className="flex items-center gap-2">
-                              <span className="text-neutral-400 w-6">{item.quantity}x</span>
+                              <span className={`${order.status === 'cancelled' ? 'text-red-400' : 'text-neutral-400'} w-6`}>{item.quantity}x</span>
                               <span>{item.name}</span>
                             </div>
                           </li>
