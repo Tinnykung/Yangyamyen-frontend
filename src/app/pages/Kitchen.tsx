@@ -227,7 +227,8 @@ export function Kitchen() {
                 
                 {order.status === 'served' && (
                   <div className="text-center text-green-600 font-semibold py-2 bg-green-50 rounded-lg">
-                    ออเดอร์นี้เสร็จแล้ว
+                    ออเดอร์นี้เสร็จq
+                    แล้ว
                   </div>
                 )}
 
