@@ -25,8 +25,13 @@ export function Cashier() {
 
   // 🔊 ฟังก์ชันเล่นเสียงแจ้งเตือน
   const playSound = () => {
-    const audio = new Audio('/bell.mp3'); 
+    const audio = new Audio('Apple pay sucess_sound track.mp3'); 
     audio.play().catch(err => console.log('เล่นเสียงไม่ได้ (เบราว์เซอร์อาจบล็อก):', err));
+  };
+
+  const playSuccessSound = () => {
+    const audio = new Audio('Cash_Money Sound Effect.mp3'); 
+    audio.play().catch(err => console.log('เล่นเสียงไม่ได้:', err));
   };
 
   useEffect(() => {
@@ -38,11 +43,25 @@ export function Cashier() {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'orders' },
         (payload) => {
+          // 1. ดักจับตอนมีออเดอร์เข้ามาใหม่ (ของเดิม)
           if (payload.eventType === 'INSERT') {
             const newOrder = payload.new as Order;
-            showNotification(` มีออเดอร์ใหม่จาก โต๊ะ ${newOrder.table_number}!`);
+            showNotification(`มีออเดอร์ใหม่จาก โต๊ะ ${newOrder.table_number}!`);
             playSound();
           }
+          
+          // 2. เพิ่มใหม่: ดักจับตอนสถานะออเดอร์ถูกอัปเดต
+          if (payload.eventType === 'UPDATE') {
+            const newOrder = payload.new as Order;
+            const oldOrder = payload.old as Order;
+            
+            // เช็คว่าสถานะเพิ่งเปลี่ยนเป็น 'paid' สดๆ ร้อนๆ
+            if (newOrder.status === 'paid' && oldOrder.status !== 'paid') {
+              showNotification(`โต๊ะ ${newOrder.table_number} ชำระเงินเรียบร้อยแล้ว!`);
+              playSuccessSound(); // เรียกใช้เสียงตอนจ่ายเงิน
+            }
+          }
+
           fetchTables();
         }
       )
@@ -154,7 +173,6 @@ export function Cashier() {
 
       if (error) throw error;
       
-      playSound(); 
       showNotification(`เช็คบิลโต๊ะ ${tableNumber} เรียบร้อยแล้ว!`);
       setShowQRForTable(null); 
       fetchTables();

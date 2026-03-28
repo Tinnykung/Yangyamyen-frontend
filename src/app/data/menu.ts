@@ -73,6 +73,70 @@ export const menuItems: MenuItem[] = [
     category: 'ของทานเล่น',
     image: 'https://img.wongnai.com/p/1920x0/2021/04/15/edfeb47726054ebd9ecf7a58c57cb68e.jpg',
   },
+  {
+    id: 10,
+    name: 'Pepsiเล็ก',
+    description: '',
+    price: 13,
+    category: 'เมนูน้ำ',
+    image: 'https://filebroker-cdn.lazada.co.th/kf/S2facb1ebcaff42c9be541c219303ee7bR.jpg'
+  },
+  {
+    id: 11,
+    name: 'Pepsiกลาง',
+    description: '',
+    price: 16,
+    category: 'เมนูน้ำ',
+    image: 'https://tse4.mm.bing.net/th/id/OIP.zJ0RMmHULR9NBj_xaCcsQQHaHa?rs=1&pid=ImgDetMain&o=7&rm=3'
+  },
+  {
+    id: 12,
+    name: 'Pepsiใหญ่',
+    description: '',
+    price: 30,
+    category: 'เมนูน้ำ',
+    image: 'https://cf.shopee.co.th/file/9f12c72fb43744b3b55ce7e2b0e41f8b'
+  },
+  {
+    id: 13,
+    name: 'น้ำแข็ง',
+    description: '',
+    price: 20,
+    category: 'เมนูน้ำ',
+    image: 'https://media.istockphoto.com/id/1337387250/th/%E0%B8%A3%E0%B8%B9%E0%B8%9B%E0%B8%96%E0%B9%88%E0%B8%B2%E0%B8%A2/%E0%B8%96%E0%B8%B1%E0%B8%87%E0%B9%82%E0%B8%A5%E0%B8%AB%E0%B8%B0%E0%B8%97%E0%B8%B5%E0%B9%88%E0%B8%A1%E0%B8%B5%E0%B8%81%E0%B9%89%E0%B8%AD%E0%B8%99%E0%B8%99%E0%B9%89%E0%B9%8D%E0%B8%B2%E0%B9%81%E0%B8%82%E0%B9%87%E0%B8%87%E0%B9%81%E0%B8%A2%E0%B8%81%E0%B8%9A%E0%B8%99%E0%B8%AA%E0%B8%B5%E0%B8%82%E0%B8%B2%E0%B8%A7.jpg?s=612x612&w=0&k=20&c=FZWSfei1Wt0C-fda8irxkKvsVwoL6zxC6DuaMBxl2_c='
+  },
+  {
+    id: 14,
+    name: 'น้ำเปล่าขวดเล็ก',
+    description: '',
+    price: 10,
+    category: 'เมนูน้ำ',
+    image: 'https://scontent.fbkk5-1.fna.fbcdn.net/v/t39.30808-6/654422608_122114432535236814_6273855305036585792_n.jpg?stp=cp6_dst-jpg_tt6&_nc_cat=109&ccb=1-7&_nc_sid=7b2446&_nc_ohc=lgOzVa3BajAQ7kNvwFmMKjo&_nc_oc=AdoXbyRhciQc7bLOS_Nj98ODuEVIw3HlowfqyzouGdavdmL9chZBw3FKvPG0ah39HaCS8620RYm16W1hbGNEMj3c&_nc_zt=23'
+  },
+  {
+    id: 15,
+    name: 'น้ำเปล่าขวดใหญ่',
+    description: '',
+    price: 20,
+    category: 'เมนูน้ำ',
+    image: 'https://scontent.fbkk5-1.fna.fbcdn.net/v/t39.30808-6/654422608_122114432535236814_6273855305036585792_n.jpg?stp=cp6_dst-jpg_tt6&_nc_cat=109&ccb=1-7&_nc_sid=7b2446&_nc_ohc=lgOzVa3BajAQ7kNvwFmMKjo&_nc_oc=AdoXbyRhciQc7bLOS_Nj98ODuEVIw3HlowfqyzouGdavdmL9chZBw3FKvPG0ah39HaCS8620RYm16W1hbGNEMj3c&_nc_zt=23'
+  },
+  {
+    id: 16,
+    name: 'เบียร์สิงห์',
+    description: '',
+    price: 65,
+    category: 'เบียร์',
+    image: 'https://tse4.mm.bing.net/th/id/OIP.LF2ytdhftaJTUwqVyTa4yAHaHa?rs=1&pid=ImgDetMain&o=7&rm=3'
+  },
+  {
+    id: 17,
+    name: 'เบียร์ช้าง',
+    description: '',
+    price: 75,
+    category: 'เบียร์',
+    image: 'https://th.bing.com/th/id/OIP.lFd4iy-78DQr5mtYfgna6wHaHa?o=7rm=3&rs=1&pid=ImgDetMain&o=7&rm=3'
+  },
 ];
 
 export const categories = [
@@ -80,5 +144,5 @@ export const categories = [
   'หมูกะทะ',
   'ของทานเล่น',
   'เมนูน้ำ',
-  '',
+  'เบียร์',
 ];

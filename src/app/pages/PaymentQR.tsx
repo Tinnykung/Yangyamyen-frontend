@@ -24,7 +24,7 @@ export function PaymentQR() {
 
   // 🔊 ฟังก์ชันเล่นเสียงแจ้งเตือน
   const playSound = () => {
-    const audio = new Audio('/bell.mp3'); 
+    const audio = new Audio('Cash_Money Sound Effect.mp3'); 
     audio.play().catch(err => console.log('เล่นเสียงไม่ได้:', err));
   };
 
