@@ -3,11 +3,13 @@ import { Search, AlertCircle, ChefHat, Clock, Utensils, ClipboardList } from 'lu
 import { supabase } from '../../supabase/client';
 import { OrderStatusTracker } from '../components/OrderStatusTracker';
 
+// 🚨 1. เพิ่ม isCancelled ใน Interface
 interface OrderItem {
   id?: string | number;
   name: string;
   quantity: number;
   price: number;
+  isCancelled?: boolean; 
 }
 
 interface ActiveOrder {
@@ -36,7 +38,7 @@ export function OrderTracking() {
         (payload: any) => {
           setActiveOrders(prevOrders => 
             prevOrders.map(order => 
-              order.id === payload.new.id ? { ...order, status: payload.new.status } : order
+              order.id === payload.new.id ? { ...order, ...payload.new } : order
             )
           );
         }
@@ -88,23 +90,30 @@ export function OrderTracking() {
     }
   };
 
-  // --- ส่วนคำนวณ: กรองเอาเฉพาะออเดอร์ที่ "ไม่ได้ถูกยกเลิก" มาคิดเงิน ---
-  const validOrders = activeOrders.filter(order => order.status !== 'cancelled');
+  // 🚨 2. กรองเฉพาะออเดอร์ที่ "ยังปกติ" และ "มีเมนูที่ไม่ได้ถูกยกเลิกเหลืออยู่"
+  const displayOrders = activeOrders.filter(order => {
+    if (order.status === 'cancelled') return false; // ข้ามบิลที่ถูกยกเลิกทั้งบิล
+    
+    // เช็คว่าในบิลนี้ มีเมนูที่ยังไม่ได้ถูกยกเลิกเหลืออยู่ไหม?
+    const hasValidItems = order.items?.some(item => !item.isCancelled);
+    return hasValidItems; // ถ้าไม่มีเมนูเหลือเลย (ถูกยกเลิกหมด) ก็จะคืนค่า false และโดนกรองทิ้งไป
+  });
 
-  // 1. คำนวณยอดรวมทั้งหมด (Grand Total) จากออเดอร์ที่ยังปกติอยู่
-  const grandTotalQuantity = validOrders.reduce((total, order) => {
-    const orderQuantity = order.items?.reduce((sum, item) => sum + (item.quantity || 1), 0) || 0;
+  // 🚨 3. คำนวณยอดรวมทั้งหมด โดยใช้ displayOrders
+  const grandTotalQuantity = displayOrders.reduce((total, order) => {
+    const orderQuantity = order.items?.reduce((sum, item) => sum + (!item.isCancelled ? (item.quantity || 1) : 0), 0) || 0;
     return total + orderQuantity;
   }, 0);
 
-  const grandTotalPrice = validOrders.reduce((total, order) => {
-    const orderPrice = order.items?.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0) || 0;
+  const grandTotalPrice = displayOrders.reduce((total, order) => {
+    const orderPrice = order.items?.reduce((sum, item) => sum + (!item.isCancelled ? ((item.price || 0) * (item.quantity || 1)) : 0), 0) || 0;
     return total + orderPrice;
   }, 0);
 
-  // 2. จัดกลุ่มรายการอาหารที่ซ้ำกันจากทุกรอบเข้าด้วยกัน (เฉพาะที่ยังปกติ)
-  const orderSummary = validOrders.reduce((acc, order) => {
+  const orderSummary = displayOrders.reduce((acc, order) => {
     order.items?.forEach(item => {
+      if (item.isCancelled) return; // ข้ามเมนูที่ถูกยกเลิก
+
       const key = item.name;
       if (!acc[key]) {
         acc[key] = { name: item.name, quantity: 0, totalPrice: 0 };
@@ -178,9 +187,9 @@ export function OrderTracking() {
             <h2 className="text-2xl font-bold text-center text-neutral-800 mb-2 mt-4 sm:mt-0">
               สถานะโต๊ะ <span className="text-amber-600 text-3xl">{searchedTable}</span>
             </h2>
-            <p className="text-center text-neutral-500 mb-8">มีทั้งหมด {activeOrders.length} รอบที่กำลังดำเนินการ</p>
+            <p className="text-center text-neutral-500 mb-8">มีทั้งหมด {displayOrders.length} รอบที่กำลังดำเนินการ</p>
 
-            {/* 📋 รายการสรุปอาหารทั้งหมด + ยอดรวม (แสดงเฉพาะที่ยังไม่โดนยกเลิก) */}
+            {/* 📋 รายการสรุปอาหารทั้งหมด + ยอดรวม */}
             {summaryList.length > 0 ? (
               <div className="bg-amber-50 rounded-2xl p-5 sm:p-7 mb-10 border border-amber-100 shadow-sm">
                 <h4 className="text-lg font-bold text-neutral-800 mb-4 flex items-center gap-2 border-b border-amber-200 pb-3">
@@ -214,64 +223,69 @@ export function OrderTracking() {
                 </div>
               </div>
             ) : (
-              // กรณีที่ทุกออเดอร์ถูกยกเลิกหมดเลย
               <div className="bg-red-50 text-red-600 p-6 rounded-2xl text-center font-bold mb-10 border border-red-100">
                 รายการอาหารทั้งหมดของโต๊ะนี้ถูกยกเลิกแล้วครับ
               </div>
             )}
             
-            <div className="relative flex py-5 items-center">
-              <div className="flex-grow border-t border-neutral-200"></div>
-              <span className="flex-shrink-0 mx-4 text-neutral-400 text-sm font-medium">รายละเอียดสถานะแต่ละรอบ</span>
-              <div className="flex-grow border-t border-neutral-200"></div>
-            </div>
-
-            {/* 🔄 ลูปแสดงสถานะของแต่ละออเดอร์ (แยกตามรอบ) */}
-            <div className="space-y-12 mt-6">
-              {activeOrders.map((order, index) => (
-                <div key={order.id} className={`relative pb-8 border-b border-neutral-100 last:border-0 last:pb-0 ${order.status === 'cancelled' ? 'opacity-70' : ''}`}>
-                  
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className={`font-bold px-4 py-1.5 rounded-full text-sm ${order.status === 'cancelled' ? 'bg-red-100 text-red-700' : 'bg-neutral-100 text-neutral-700'}`}>
-                      รอบที่ {index + 1}
-                    </div>
-                    <div className="flex items-center gap-1 text-neutral-400 text-sm">
-                      <Clock size={14} />
-                      <span>{new Date(order.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.</span>
-                    </div>
-                  </div>
-
-                  {/* ถ้าออเดอร์โดนยกเลิก ให้แสดงป้ายสีแดงแทน Tracker เดิม */}
-                  {order.status === 'cancelled' ? (
-                    <div className="bg-red-50 text-red-600 p-4 rounded-xl text-center font-bold mb-4 border border-red-200">
-                      ออเดอร์นี้ถูกยกเลิกแล้ว ❌
-                    </div>
-                  ) : (
-                    <OrderStatusTracker status={order.status} />
-                  )}
-
-                  {/* กล่องแสดงรายการอาหารของรอบย่อย */}
-                  {order.items && order.items.length > 0 && (
-                    <div className={`mt-8 rounded-xl p-4 border ${order.status === 'cancelled' ? 'bg-red-50/50 border-red-100' : 'bg-neutral-50/50 border-neutral-100'}`}>
-                      <h4 className={`text-xs font-bold mb-3 flex items-center gap-2 ${order.status === 'cancelled' ? 'text-red-500' : 'text-neutral-500'}`}>
-                        <Utensils size={14} /> รายการอาหาร {order.status === 'cancelled' && '(ยกเลิก)'}
-                      </h4>
-                      <ul className="space-y-2">
-                        {order.items.map((item, idx) => (
-                          <li key={idx} className={`flex justify-between items-center text-sm ${order.status === 'cancelled' ? 'text-red-400 line-through' : 'text-neutral-600'}`}>
-                            <div className="flex items-center gap-2">
-                              <span className={`${order.status === 'cancelled' ? 'text-red-400' : 'text-neutral-400'} w-6`}>{item.quantity}x</span>
-                              <span>{item.name}</span>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
+            {/* ซ่อนส่วนแสดงผลรอบย่อย ถ้าไม่มีออเดอร์ให้แสดงแล้ว */}
+            {displayOrders.length > 0 && (
+              <>
+                <div className="relative flex py-5 items-center">
+                  <div className="flex-grow border-t border-neutral-200"></div>
+                  <span className="flex-shrink-0 mx-4 text-neutral-400 text-sm font-medium">รายละเอียดสถานะแต่ละรอบ</span>
+                  <div className="flex-grow border-t border-neutral-200"></div>
                 </div>
-              ))}
-            </div>
+
+                {/* 🔄 ลูปแสดงสถานะของแต่ละออเดอร์ (ใช้ displayOrders แทน) */}
+                <div className="space-y-12 mt-6">
+                  {displayOrders.map((order, index) => (
+                    <div key={order.id} className="relative pb-8 border-b border-neutral-100 last:border-0 last:pb-0">
+                      
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="font-bold px-4 py-1.5 rounded-full text-sm bg-neutral-100 text-neutral-700">
+                          รอบที่ {index + 1}
+                        </div>
+                        <div className="flex items-center gap-1 text-neutral-400 text-sm">
+                          <Clock size={14} />
+                          <span>{new Date(order.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.</span>
+                        </div>
+                      </div>
+
+                      <OrderStatusTracker status={order.status} />
+
+                      {/* กล่องแสดงรายการอาหารของรอบย่อย */}
+                      {order.items && order.items.length > 0 && (
+                        <div className="mt-8 rounded-xl p-4 border bg-neutral-50/50 border-neutral-100">
+                          <h4 className="text-xs font-bold mb-3 flex items-center gap-2 text-neutral-500">
+                            <Utensils size={14} /> รายการอาหาร
+                          </h4>
+                          <ul className="space-y-2">
+                            {order.items.map((item, idx) => {
+                              // ถ้าเมนูนี้ถูกยกเลิก (แต่เมนูอื่นในบิลยังอยู่) จะแสดงขีดฆ่า
+                              const isItemCancelled = item.isCancelled;
+
+                              return (
+                                <li key={idx} className={`flex justify-between items-center text-sm ${isItemCancelled ? 'text-red-400 line-through opacity-70' : 'text-neutral-600'}`}>
+                                  <div className="flex items-center gap-2">
+                                    <span className={`${isItemCancelled ? 'text-red-400' : 'text-neutral-400'} w-6`}>{item.quantity}x</span>
+                                    <span>{item.name}</span>
+                                    {isItemCancelled && (
+                                      <span className="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full ml-1 not-line-through inline-block">ยกเลิกแล้ว</span>
+                                    )}
+                                  </div>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
+                      )}
+
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
             
           </div>
         )}

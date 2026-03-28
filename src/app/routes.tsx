@@ -8,6 +8,7 @@ import { Kitchen } from './pages/Kitchen';
 import { Cashier } from './pages/Cashier';
 import { PaymentQR } from "./pages/PaymentQR";
 import { OrderTracking } from './pages/OrderTracking'; 
+import { Receipt } from "./pages/Receipt";
 
 export const router = createBrowserRouter([
   {
@@ -22,6 +23,7 @@ export const router = createBrowserRouter([
       { path: "cashier", Component: Cashier },
       { path: '/payment/:tableNumber', Component: PaymentQR },
       { path: '/tracking', Component: OrderTracking },
+      { path: '/receipt/:receiptId', Component: Receipt },
     ],
   },
 ]);

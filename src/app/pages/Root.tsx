@@ -30,7 +30,7 @@ export function Root() {
       </style>
 
       {/* ภาพพื้นหลังเคลื่อนไหวช้าๆ (อยู่เลเยอร์ล่างสุด) */}
-      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden opacity-[0.1]">
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden opacity-[0.07]">
         <img 
           src={backgroundImage} 
           alt="background decoration" 

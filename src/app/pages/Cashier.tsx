@@ -4,8 +4,8 @@ import generatePayload from 'promptpay-qr';
 import QRCode from 'react-qr-code'; 
 import { useNavigate } from 'react-router-dom';
 
-// ... (Interface OrderItem, Order, SummaryItem, TableSummary )
-interface OrderItem { id: string; name: string; price: number; quantity: number; }
+// 🚨 เพิ่ม isCancelled เข้ามาใน OrderItem
+interface OrderItem { id: string; name: string; price: number; quantity: number; isCancelled?: boolean; }
 interface Order { id: string; table_number: string; items: OrderItem[]; total_amount: number; status: string; created_at: string; receipt_id?: string; }
 interface SummaryItem { name: string; price: number; quantity: number; }
 interface TableSummary { table_number: string; total_amount: number; order_count: number; all_served: boolean; first_order_time: string; items: SummaryItem[]; receipt_id?: string; }
@@ -21,12 +21,10 @@ export function Cashier() {
   const [notification, setNotification] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  // State สำหรับเก็บว่ากำลังเปิดดู QR Code ของโต๊ะไหนอยู่
   const [showQRForTable, setShowQRForTable] = useState<string | null>(null);
 
   // 🔊 ฟังก์ชันเล่นเสียงแจ้งเตือน
   const playSound = () => {
-    // ต้องมีไฟล์ bell.mp3 ในโฟลเดอร์ public
     const audio = new Audio('/bell.mp3'); 
     audio.play().catch(err => console.log('เล่นเสียงไม่ได้ (เบราว์เซอร์อาจบล็อก):', err));
   };
@@ -43,7 +41,7 @@ export function Cashier() {
           if (payload.eventType === 'INSERT') {
             const newOrder = payload.new as Order;
             showNotification(` มีออเดอร์ใหม่จาก โต๊ะ ${newOrder.table_number}!`);
-            playSound(); // 🔊 เล่นเสียงเวลามีออเดอร์ใหม่เข้า
+            playSound();
           }
           fetchTables();
         }
@@ -71,6 +69,24 @@ export function Cashier() {
       const paidGroup: Record<string, any> = {};
 
       (data || []).forEach((order: Order) => {
+        // 1. ข้ามออเดอร์ที่ถูกยกเลิกทั้งบิลไปเลย
+        if (order.status === 'cancelled') return;
+
+        // 2. 🚨 คำนวณยอดรวมใหม่ & นับจำนวนเมนูที่ "ยังปกติอยู่" ในออเดอร์นี้
+        let validOrderAmount = 0;
+        let validItemsCount = 0;
+
+        order.items?.forEach(item => {
+          if (!item.isCancelled) {
+            validOrderAmount += (item.price * item.quantity);
+            validItemsCount += 1;
+          }
+        });
+
+        // 3. 🚨 ถ้าออเดอร์นี้โดนยกเลิกเมนูย่อยจน "ไม่เหลือเมนูเลย" ให้ข้ามออเดอร์นี้ไปเลย (โต๊ะจะได้ไม่โผล่มาเป็นโต๊ะผี)
+        if (validItemsCount === 0) return;
+
+        // ---------------- ดำเนินการจัดกลุ่มโต๊ะตามปกติ ----------------
         if (order.status === 'paid') {
           const groupId = order.receipt_id || `OLD-${order.id}`;
           if (!paidGroup[groupId]) {
@@ -78,9 +94,13 @@ export function Cashier() {
           } else {
             if (new Date(order.created_at) < new Date(paidGroup[groupId].data.first_order_time)) paidGroup[groupId].data.first_order_time = order.created_at;
           }
-          paidGroup[groupId].data.total_amount += order.total_amount;
+          
+          // 🚨 ใช้ยอดที่คำนวณใหม่เท่านั้น หักลบของยกเลิกแล้ว
+          paidGroup[groupId].data.total_amount += validOrderAmount;
           paidGroup[groupId].data.order_count += 1;
+          
           order.items.forEach(item => {
+            if (item.isCancelled) return; 
             if (paidGroup[groupId].itemsMap[item.name]) paidGroup[groupId].itemsMap[item.name].quantity += item.quantity;
             else paidGroup[groupId].itemsMap[item.name] = { name: item.name, price: item.price, quantity: item.quantity };
           });
@@ -90,10 +110,14 @@ export function Cashier() {
           } else {
             if (new Date(order.created_at) < new Date(activeGroup[order.table_number].data.first_order_time)) activeGroup[order.table_number].data.first_order_time = order.created_at;
           }
-          activeGroup[order.table_number].data.total_amount += order.total_amount;
+          
+          // 🚨 ใช้ยอดที่คำนวณใหม่เท่านั้น
+          activeGroup[order.table_number].data.total_amount += validOrderAmount;
           activeGroup[order.table_number].data.order_count += 1;
           if (order.status !== 'served') activeGroup[order.table_number].data.all_served = false;
+          
           order.items.forEach(item => {
+            if (item.isCancelled) return; 
             if (activeGroup[order.table_number].itemsMap[item.name]) activeGroup[order.table_number].itemsMap[item.name].quantity += item.quantity;
             else activeGroup[order.table_number].itemsMap[item.name] = { name: item.name, price: item.price, quantity: item.quantity };
           });
@@ -126,13 +150,13 @@ export function Cashier() {
         .from('orders')
         .update({ status: 'paid', receipt_id: generateReceiptId })
         .eq('table_number', tableNumber)
-        .neq('status', 'paid');
+        .in('status', ['pending', 'cooking', 'served']); 
 
       if (error) throw error;
       
-      playSound(); // 🔊 เล่นเสียงตอนเช็คบิลสำเร็จ!
+      playSound(); 
       showNotification(`เช็คบิลโต๊ะ ${tableNumber} เรียบร้อยแล้ว!`);
-      setShowQRForTable(null); // ปิดหน้าต่าง QR
+      setShowQRForTable(null); 
       fetchTables();
     } catch (error: any) {
       console.error('Checkout error:', error.message);
@@ -152,7 +176,6 @@ export function Cashier() {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {tables.map((table, index) => {
-          // 📱 สร้างข้อมูล Payload สำหรับ PromptPay QR Code
           const qrPayload = generatePayload(PROMPTPAY_ID, { amount: table.total_amount });
           const isShowingQR = showQRForTable === table.table_number;
 
@@ -177,7 +200,6 @@ export function Cashier() {
                   </div>
                 </div>
               ) : (
-                /* --- หน้าตาการ์ดปกติ --- */
                 <>
                   <div className="flex justify-between items-start mb-4 border-b pb-2">
                     <div>
@@ -213,16 +235,15 @@ export function Cashier() {
                     </div>
                   </div>
 
-                  {!isHistory && (
+                  {/* 🚨 อัปเดตส่วนปุ่มด้านล่างตรงนี้ครับ */}
+                  {!isHistory ? (
                     <div className="mt-auto pt-4 flex gap-2 border-t">
-                      {/* ปุ่มสแกนจ่าย QR Code */}
                       <button 
                         onClick={() => navigate(`/payment/${table.table_number}`)}
                         className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-bold flex justify-center items-center gap-2"
                       >
                         สแกนจ่าย
                       </button>
-                      {/* ปุ่มจ่ายเงินสด */}
                       <button 
                         onClick={() => handleCheckout(table.table_number)}
                         className="flex-1 bg-neutral-900 text-white py-3 rounded-lg hover:bg-neutral-800 font-bold flex justify-center items-center gap-2"
@@ -230,6 +251,18 @@ export function Cashier() {
                         เงินสด
                       </button>
                     </div>
+                  ) : (
+                    // 🚨 เพิ่มปุ่มดูใบเสร็จ สำหรับแท็บประวัติเช็คบิล
+                    table.receipt_id && (
+                      <div className="mt-auto pt-4 flex gap-2 border-t">
+                        <button 
+                          onClick={() => navigate(`/receipt/${table.receipt_id}`)}
+                          className="w-full bg-neutral-100 text-neutral-700 py-3 rounded-lg hover:bg-neutral-200 font-bold flex justify-center items-center gap-2 border border-neutral-300 transition-colors"
+                        >
+                          ดูใบเสร็จ
+                        </button>
+                      </div>
+                    )
                   )}
                 </>
               )}
@@ -240,7 +273,7 @@ export function Cashier() {
     );
   };
 
-  if (loading) return <div className="text-center py-20 text-xl font-semibold">กำลังโหลดข้อมูล... ⏳</div>;
+  if (loading) return <div className="text-center py-20 text-xl font-semibold">กำลังโหลดข้อมูล... </div>;
 
   return (
     <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

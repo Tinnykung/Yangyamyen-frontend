@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../supabase/client';
 
-// กำหนดโครงสร้างข้อมูลให้ตรงกับใน Supabase
+// เพิ่ม isCancelled เข้ามาใน OrderItem
 interface OrderItem {
-  id: string;
+  id?: string;
   name: string;
   price: number;
   quantity: number;
+  isCancelled?: boolean; 
 }
 
 interface Order {
@@ -22,18 +23,16 @@ export function Kitchen() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // ดึงข้อมูลออเดอร์เมื่อโหลดหน้านี้
   useEffect(() => {
     fetchOrders();
 
     const subscription = supabase
-      .channel('kitchen-orders') // ตั้งชื่อช่องสัญญาณ
+      .channel('kitchen-orders')
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'orders' }, // ฟังทุกการเคลื่อนไหว (Insert, Update, Delete) ของตาราง orders
+        { event: '*', schema: 'public', table: 'orders' },
         (payload) => {
           console.log('🔔 มีอัปเดตจากห้องครัว!', payload);
-          // พอมีคนสั่งใหม่ หรือเปลี่ยนสถานะ ให้โหลดข้อมูลมาแสดงใหม่ทันที
           fetchOrders();
         }
       )
@@ -49,8 +48,7 @@ export function Kitchen() {
       const { data, error } = await supabase
         .from('orders')
         .select('*')
-        // ลบบรรทัด .neq('status', 'served') ออกไปแล้ว
-        .order('created_at', { ascending: false }); // เปลี่ยนเป็น false เพื่อให้ออเดอร์ใหม่สุดอยู่บนสุด
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       setOrders(data || []);
@@ -61,12 +59,11 @@ export function Kitchen() {
     }
   };
 
-  // ฟังก์ชันสำหรับเปลี่ยนสถานะออเดอร์
+  // 1. ฟังก์ชันเดิม: เปลี่ยนสถานะทั้งออเดอร์
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
-    // เพิ่มการแจ้งเตือนเพื่อยืนยันการยกเลิกออเดอร์
     if (newStatus === 'cancelled') {
-      const isConfirmed = window.confirm('คุณต้องการยกเลิกออเดอร์นี้ใช่หรือไม่?');
-      if (!isConfirmed) return; // ถ้ายกเลิกการยืนยัน ให้หยุดการทำงาน
+      const isConfirmed = window.confirm('คุณต้องการยกเลิก "ทั้งออเดอร์" นี้เลยใช่หรือไม่?');
+      if (!isConfirmed) return;
     }
 
     try {
@@ -76,12 +73,53 @@ export function Kitchen() {
         .eq('id', orderId);
 
       if (error) throw error;
-
-      // อัปเดตหน้าจอทันทีเมื่อเปลี่ยนสถานะสำเร็จ
       fetchOrders();
     } catch (error: any) {
       console.error('Error updating status:', error.message);
       alert('เปลี่ยนสถานะไม่สำเร็จ!');
+    }
+  };
+
+  // 2. ฟังก์ชันใหม่: ยกเลิกแค่บางเมนู
+  const cancelSingleItem = async (orderId: string, itemIndex: number) => {
+    const isConfirmed = window.confirm('ต้องการยกเลิก "เฉพาะเมนูนี้" ใช่หรือไม่?');
+    if (!isConfirmed) return;
+
+    // หาออเดอร์ต้นทาง
+    const orderToUpdate = orders.find(o => o.id === orderId);
+    if (!orderToUpdate) return;
+
+    // จำลอง array ของ items ขึ้นมาใหม่เพื่อแก้ไข
+    const updatedItems = [...orderToUpdate.items];
+    
+    // ติดป้ายให้เมนูที่เลือกว่า isCancelled = true
+    updatedItems[itemIndex] = { ...updatedItems[itemIndex], isCancelled: true };
+
+    // คำนวณยอดเงินรวมใหม่ (เอาเฉพาะเมนูที่ไม่ได้ถูกยกเลิกมาบวกกัน)
+    const newTotalAmount = updatedItems.reduce((sum, item) => {
+      if (item.isCancelled) return sum;
+      return sum + (item.price * item.quantity);
+    }, 0);
+
+    // เช็คว่าถ้ายกเลิกเมนูย่อยจนหมดทุกอันแล้ว ให้เปลี่ยนสถานะบิลหลักเป็น cancelled ไปเลย
+    const allItemsCancelled = updatedItems.every(item => item.isCancelled);
+    const newOrderStatus = allItemsCancelled ? 'cancelled' : orderToUpdate.status;
+
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ 
+          items: updatedItems, 
+          total_amount: newTotalAmount,
+          status: newOrderStatus
+        })
+        .eq('id', orderId);
+
+      if (error) throw error;
+      fetchOrders();
+    } catch (error: any) {
+      console.error('Error cancelling item:', error.message);
+      alert('ยกเลิกเมนูไม่สำเร็จ โปรดลองอีกครั้ง');
     }
   };
 
@@ -117,7 +155,6 @@ export function Kitchen() {
                   {new Date(order.created_at).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' })} น.
                 </p>
 
-                {/* อัปเดตป้ายสถานะให้รองรับ 4 แบบ (เพิ่ม cancelled) */}
                 <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
                   order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                   order.status === 'cooking' ? 'bg-blue-100 text-blue-800' :
@@ -131,17 +168,36 @@ export function Kitchen() {
                 </span>
               </div>
 
-              <ul className="space-y-2 mb-6 flex-grow">
-                {order.items.map((item, index) => (
-                  <li key={index} className={`flex justify-between ${order.status === 'cancelled' ? 'text-red-400 line-through' : 'text-neutral-700'}`}>
-                    <span>- {item.name}</span>
-                    <span className="font-bold">x{item.quantity}</span>
-                  </li>
-                ))}
+              {/* รายการอาหาร */}
+              <ul className="space-y-3 mb-6 flex-grow text-left">
+                {order.items.map((item, index) => {
+                  // เช็คว่าเมนูนี้โดนยกเลิก หรือทั้งบิลโดนยกเลิกหรือไม่
+                  const isItemCancelled = item.isCancelled || order.status === 'cancelled';
+                  
+                  return (
+                    <li key={index} className="flex justify-between items-center">
+                      <div className={`flex gap-2 items-start ${isItemCancelled ? 'text-red-400 line-through opacity-70' : 'text-neutral-700'}`}>
+                        <span>- {item.name}</span>
+                        <span className="font-bold">x{item.quantity}</span>
+                        {item.isCancelled && <span className="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full mt-0.5">ยกเลิกแล้ว</span>}
+                      </div>
+
+                      {/* ปุ่ม X สำหรับยกเลิกทีละเมนู (แสดงเฉพาะออเดอร์ที่ยังไม่เสร็จ/ไม่โดนยกเลิก) */}
+                      {(order.status === 'pending' || order.status === 'cooking') && !isItemCancelled && (
+                        <button
+                          onClick={() => cancelSingleItem(order.id, index)}
+                          className="text-xs bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-700 px-2 py-1 rounded border border-red-100 transition-colors"
+                          title="ยกเลิกเฉพาะเมนูนี้"
+                        >
+                          ยกเลิก
+                        </button>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
 
               <div className="mt-auto space-y-2 pt-4 border-t">
-                {/* แสดงปุ่มเมื่อสถานะเป็น pending หรือ cooking */}
                 {(order.status === 'pending' || order.status === 'cooking') && (
                   <div className="flex flex-col gap-2">
                     {order.status === 'pending' && (
@@ -160,19 +216,18 @@ export function Kitchen() {
                         เสิร์ฟแล้ว (ปิดออเดอร์)
                       </button>
                     )}
-                    {/* ปุ่มยกเลิกออเดอร์ (สีแดง) */}
                     <button
                       onClick={() => updateOrderStatus(order.id, 'cancelled')}
                       className="w-full bg-red-100 text-red-600 py-2 rounded-lg hover:bg-red-200 font-semibold transition-colors mt-1"
                     >
-                      ยกเลิกออเดอร์
+                      ยกเลิกทั้งออเดอร์
                     </button>
                   </div>
                 )}
                 
                 {order.status === 'served' && (
                   <div className="text-center text-green-600 font-semibold py-2 bg-green-50 rounded-lg">
-                    ออเดอร์นี้เสร็จสมบูรณ์แล้ว 🎉
+                    ออเดอร์นี้เสร็จแล้ว
                   </div>
                 )}
 
