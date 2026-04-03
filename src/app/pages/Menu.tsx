@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'; // 🚨 เพิ่ม useEffect
 import { menuItems, categories } from '../data/menu';
 import { MenuItemCard } from '../components/MenuItemCard';
-import { RequireQR } from './RequireQR';
-import { useCart } from '../context/CartContext'; // 🚨 นำเข้า useCart
-import { supabase } from '../../supabase/client'; // 🚨 นำเข้า supabase
+import { RequireQR } from '../pages/RequireQR';
+import { useCart } from '../context/CartContext'; // 
+import { supabase } from '../../supabase/client'; // 
 
 export function Menu() {
   const [selectedCategory, setSelectedCategory] = useState('All');
