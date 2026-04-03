@@ -47,7 +47,7 @@ export function Root() {
               {/* โลโก้จะหมุนดุ๊กดิ๊กนิดๆ ตอนเอาเมาส์ไปชี้ */}
               <div className="transform duration-500 group-hover:rotate-4 group-hover:scale-110">
                 <ImageWithFallback 
-                  src="https://scontent.fbkk5-4.fna.fbcdn.net/v/t39.30808-6/619258884_5171381759753893_6892651003205238714_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=1d70fc&_nc_ohc=jts7BNSON4oQ7kNvwHH8epC&_nc_oc=AdrDAgfQSkN7YGA8rzWIR9v11lwgZRPkG6SPIoGDDk4BpjwmhiLkjSzvDsdHxtNu_dKs5UqynBfeMh8m-eceX6XD&_nc_zt=23&_nc_ht=scontent.fbkk5-4.fna&_nc_gid=65miqv6DmQOV97m3Jx3eww&_nc_ss=7a32e&oh=00_AfzcIpgAXAvtIa5NVf156JREGS42cjK63Ov_5vmHksAkng&oe=69C81B76"
+                  src="https://scontent.fbkk5-4.fna.fbcdn.net/v/t39.30808-6/619258884_5171381759753893_6892651003205238714_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=1d70fc&_nc_ohc=S7OU-98bMjIQ7kNvwFrBNp_&_nc_oc=Adpx1gFKads6bSDiXWW2vw2D5Hv2LQBllooeihoQCaN8P-aykFtQ06YfAst2IBdGZkOLwyx8YdzBTJpKOOTjyZFE&_nc_zt=23&_nc_ht=scontent.fbkk5-4.fna&_nc_gid=HIrgFLl7lVEtT__YVWVNWQ&_nc_ss=7a3a8&oh=00_Af1iEDF-KGUbxys8y_t6mgT8ApUj6qztv5mvbKdT5GHEJw&oe=69D582B6"
                   alt="ย่างยามเย็น-304 Logo" 
                   className="w-16 h-16 md:w-20 md:h-20 object-contain rounded"
                 />
