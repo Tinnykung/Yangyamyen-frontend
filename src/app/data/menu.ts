@@ -87,7 +87,7 @@ export const menuItems: MenuItem[] = [
     description: '',
     price: 13,
     category: 'เมนูน้ำ',
-    image: 'https://filebroker-cdn.lazada.co.th/kf/S2facb1ebcaff42c9be541c219303ee7bR.jpg'
+    image: 'S__36536394_0.jpg'
   },
   {
     id: 11,
@@ -95,7 +95,7 @@ export const menuItems: MenuItem[] = [
     description: '',
     price: 17,
     category: 'เมนูน้ำ',
-    image: 'https://tse4.mm.bing.net/th/id/OIP.zJ0RMmHULR9NBj_xaCcsQQHaHa?rs=1&pid=ImgDetMain&o=7&rm=3'
+    image: 'S__36536393_0.jpg'
   },
   {
     id: 12,
@@ -103,7 +103,7 @@ export const menuItems: MenuItem[] = [
     description: '',
     price: 30,
     category: 'เมนูน้ำ',
-    image: 'https://cf.shopee.co.th/file/9f12c72fb43744b3b55ce7e2b0e41f8b'
+    image: 'S__36536392_0.jpg'
   },
   {
     id: 13,
@@ -119,7 +119,7 @@ export const menuItems: MenuItem[] = [
     description: '',
     price: 10,
     category: 'เมนูน้ำ',
-    image: 'https://scontent.fbkk5-1.fna.fbcdn.net/v/t39.30808-6/654422608_122114432535236814_6273855305036585792_n.jpg?stp=cp6_dst-jpg_tt6&_nc_cat=109&ccb=1-7&_nc_sid=7b2446&_nc_ohc=lgOzVa3BajAQ7kNvwFmMKjo&_nc_oc=AdoXbyRhciQc7bLOS_Nj98ODuEVIw3HlowfqyzouGdavdmL9chZBw3FKvPG0ah39HaCS8620RYm16W1hbGNEMj3c&_nc_zt=23'
+    image: 'S__36536396_0.jpg'
   },
   {
     id: 15,
@@ -127,7 +127,7 @@ export const menuItems: MenuItem[] = [
     description: '',
     price: 20,
     category: 'เมนูน้ำ',
-    image: 'https://scontent.fbkk5-1.fna.fbcdn.net/v/t39.30808-6/654422608_122114432535236814_6273855305036585792_n.jpg?stp=cp6_dst-jpg_tt6&_nc_cat=109&ccb=1-7&_nc_sid=7b2446&_nc_ohc=lgOzVa3BajAQ7kNvwFmMKjo&_nc_oc=AdoXbyRhciQc7bLOS_Nj98ODuEVIw3HlowfqyzouGdavdmL9chZBw3FKvPG0ah39HaCS8620RYm16W1hbGNEMj3c&_nc_zt=23'
+    image: 'S__36536395_0.jpg'
   },
   {
     id: 16,

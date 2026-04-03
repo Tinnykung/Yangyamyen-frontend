@@ -66,7 +66,7 @@ export function Menu() {
         </p>
         <div className="mt-4">
           <span className="bg-orange-100 text-orange-700 px-4 py-1 rounded-full font-bold border border-orange-200">
-            โต๊ะที่สั่ง: {tableNumber}
+            โต๊ะ : {tableNumber}
           </span>
         </div>
       </div>

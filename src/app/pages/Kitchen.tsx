@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../supabase/client';
 
-// เพิ่ม isCancelled เข้ามาใน OrderItem
+// เพิ่ม note เข้ามาใน OrderItem เพื่อรองรับหมายเหตุ
 interface OrderItem {
   id?: string;
   name: string;
   price: number;
   quantity: number;
   isCancelled?: boolean; 
+  note?: string; // 🚨 เพิ่มบรรทัดนี้สำหรับหมายเหตุ
 }
 
 interface Order {
@@ -17,6 +18,7 @@ interface Order {
   total_amount: number;
   status: string;
   created_at: string;
+  note: string;
 }
 
 export function Kitchen() {
@@ -48,6 +50,7 @@ export function Kitchen() {
       const { data, error } = await supabase
         .from('orders')
         .select('*')
+        .neq('status', 'paid')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -138,7 +141,7 @@ export function Kitchen() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {orders.map((order) => (
-            <div key={order.id} className={`bg-white rounded-lg shadow-md p-8 text-center border-2 ${
+            <div key={order.id} className={`bg-white rounded-lg shadow-md p-8 text-center border-2 flex flex-col ${
                 order.status === 'served' ? 'border-green-200 opacity-75' : 
                 order.status === 'cancelled' ? 'border-red-200 opacity-75 bg-red-50' : 
                 'border-orange-100'
@@ -151,21 +154,22 @@ export function Kitchen() {
                   }`}>
                   โต๊ะ: {order.table_number}
                 </h2>
-                <p className="text-sm text-neutral-500 mt-1">
-                  {new Date(order.created_at).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' })} น.
-                </p>
-
-                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                  order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                  order.status === 'cooking' ? 'bg-blue-100 text-blue-800' :
-                  order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                  'bg-green-100 text-green-800'
-                }`}>
-                  {order.status === 'pending' ? 'รอทำ ⏳' :
-                    order.status === 'cooking' ? 'กำลังทำ 🍳' :
-                    order.status === 'cancelled' ? 'ยกเลิกแล้ว ❌' :
-                    'เสิร์ฟแล้ว ✅'}
-                </span>
+                <div className="flex flex-col items-end">
+                  <p className="text-sm text-neutral-500 mb-1">
+                    {new Date(order.created_at).toLocaleString('th-TH', { timeStyle: 'short' })} น.
+                  </p>
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                    order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                    order.status === 'cooking' ? 'bg-blue-100 text-blue-800' :
+                    order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                    'bg-green-100 text-green-800'
+                  }`}>
+                    {order.status === 'pending' ? 'รอทำ ⏳' :
+                      order.status === 'cooking' ? 'กำลังทำ 🍳' :
+                      order.status === 'cancelled' ? 'ยกเลิกแล้ว ❌' :
+                      'เสิร์ฟแล้ว ✅'}
+                  </span>
+                </div>
               </div>
 
               {/* รายการอาหาร */}
@@ -175,35 +179,53 @@ export function Kitchen() {
                   const isItemCancelled = item.isCancelled || order.status === 'cancelled';
                   
                   return (
-                    <li key={index} className="flex justify-between items-center">
-                      <div className={`flex gap-2 items-start ${isItemCancelled ? 'text-red-400 line-through opacity-70' : 'text-neutral-700'}`}>
-                        <span>- {item.name}</span>
-                        <span className="font-bold">x{item.quantity}</span>
-                        {item.isCancelled && <span className="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full mt-0.5">ยกเลิกแล้ว</span>}
+                    <li key={index} className="flex flex-col border-b border-neutral-50 pb-2 last:border-0">
+                      <div className="flex justify-between items-start">
+                        <div className={`flex gap-2 items-start ${isItemCancelled ? 'text-red-400 line-through opacity-70' : 'text-neutral-700'}`}>
+                          <span>- {item.name}</span>
+                          <span className="font-bold">x{item.quantity}</span>
+                          {item.isCancelled && <span className="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full mt-0.5 whitespace-nowrap">ยกเลิกแล้ว</span>}
+                        </div>
+
+                        {/* ปุ่ม X สำหรับยกเลิกทีละเมนู */}
+                        {(order.status === 'pending' || order.status === 'cooking') && !isItemCancelled && (
+                          <button
+                            onClick={() => cancelSingleItem(order.id, index)}
+                            className="text-xs bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-700 px-2 py-1 rounded border border-red-100 transition-colors ml-2 shrink-0"
+                            title="ยกเลิกเฉพาะเมนูนี้"
+                          >
+                            ยกเลิก
+                          </button>
+                        )}
                       </div>
 
-                      {/* ปุ่ม X สำหรับยกเลิกทีละเมนู (แสดงเฉพาะออเดอร์ที่ยังไม่เสร็จ/ไม่โดนยกเลิก) */}
-                      {(order.status === 'pending' || order.status === 'cooking') && !isItemCancelled && (
-                        <button
-                          onClick={() => cancelSingleItem(order.id, index)}
-                          className="text-xs bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-700 px-2 py-1 rounded border border-red-100 transition-colors"
-                          title="ยกเลิกเฉพาะเมนูนี้"
-                        >
-                          ยกเลิก
-                        </button>
+                      {/* 🚨 แสดงหมายเหตุ (ถ้ามี) ไว้ใต้ชื่อเมนู */}
+                      {item.note && (
+                        <div className={`pl-3 mt-1 text-sm font-medium ${isItemCancelled ? 'text-red-300 line-through' : 'text-orange-600'}`}>
+                          ** หมายเหตุ: {item.note}
+                        </div>
                       )}
                     </li>
                   );
                 })}
               </ul>
-
+              {order.note && order.note.trim() !== '' && (
+                <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg text-left shadow-sm">
+                  <span className="font-bold text-orange-800 text-sm flex items-center gap-1">
+                    หมายเหตุ
+                  </span>
+                  <p className="text-orange-700 mt-1 whitespace-pre-wrap text-sm leading-relaxed">
+                    {order.note}
+                  </p>
+                </div>
+              )}
               <div className="mt-auto space-y-2 pt-4 border-t">
                 {(order.status === 'pending' || order.status === 'cooking') && (
                   <div className="flex flex-col gap-2">
                     {order.status === 'pending' && (
                       <button
                         onClick={() => updateOrderStatus(order.id, 'cooking')}
-                        className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 font-semibold transition-colors"
+                        className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 font-semibold transition-colors shadow-sm"
                       >
                         รับออเดอร์ (เริ่มทำ)
                       </button>
@@ -211,14 +233,14 @@ export function Kitchen() {
                     {order.status === 'cooking' && (
                       <button
                         onClick={() => updateOrderStatus(order.id, 'served')}
-                        className="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 font-semibold transition-colors"
+                        className="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 font-semibold transition-colors shadow-sm"
                       >
                         เสิร์ฟแล้ว (ปิดออเดอร์)
                       </button>
                     )}
                     <button
                       onClick={() => updateOrderStatus(order.id, 'cancelled')}
-                      className="w-full bg-red-100 text-red-600 py-2 rounded-lg hover:bg-red-200 font-semibold transition-colors mt-1"
+                      className="w-full bg-red-50 text-red-600 py-2 rounded-lg hover:bg-red-100 font-semibold transition-colors mt-1"
                     >
                       ยกเลิกทั้งออเดอร์
                     </button>
@@ -227,13 +249,12 @@ export function Kitchen() {
                 
                 {order.status === 'served' && (
                   <div className="text-center text-green-600 font-semibold py-2 bg-green-50 rounded-lg">
-                    ออเดอร์นี้เสร็จq
-                    แล้ว
+                    ออเดอร์นี้เสิร์ฟแล้ว ✅
                   </div>
                 )}
 
                 {order.status === 'cancelled' && (
-                  <div className="text-center text-red-600 font-semibold py-2 bg-red-100 rounded-lg">
+                  <div className="text-center text-red-600 font-semibold py-2 bg-red-50 rounded-lg">
                     ออเดอร์นี้ถูกยกเลิกแล้ว ❌
                   </div>
                 )}

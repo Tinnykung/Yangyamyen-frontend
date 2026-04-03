@@ -20,7 +20,7 @@ export function OrderConfirmation() {
         <h1 className="text-3xl mb-4 text-neutral-900">ยืนยันการสั่งอาหาร!</h1>
         
         <p className="text-lg text-neutral-600 mb-2">
-          ขอบคุณที่สั่งอาหารกับเรา! ออเดอร์ของคุณได้รับการยืนยันแล้วครับ 🎉
+          ขอบคุณที่สั่งอาหารกับเรา! ออเดอร์ของคุณได้รับการยืนยันแล้ว
         </p>
 
         {tableNumber && (
