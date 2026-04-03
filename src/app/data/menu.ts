@@ -58,7 +58,7 @@ export const menuItems: MenuItem[] = [
     image: 'https://img.wongnai.com/p/1920x0/2019/02/15/9424f3e55d214f6292c096b8855f21d3.jpg',
   },
   {
-    id: 8,
+    id: 26,
     name: 'หมูแดดเดียว',
     description: '',
     price: 70,
