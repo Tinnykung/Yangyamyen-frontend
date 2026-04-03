@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'; // 🚨 เพิ่ม useEffect
 import { menuItems, categories } from '../data/menu';
 import { MenuItemCard } from '../components/MenuItemCard';
-import { RequireQR } from '../pages/RequireQR';
+import { RequireQR } from './RequireQR';
 import { useCart } from '../context/CartContext'; // 
 import { supabase } from '../../supabase/client'; // 
 
