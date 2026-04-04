@@ -117,7 +117,7 @@ export function Receipt() {
 
         <div className="text-center mb-6">
           <h1 className="text-2xl font-bold text-neutral-900 mb-1">ใบเสร็จรับเงิน</h1>
-          <p className="text-sm text-neutral-500">ร้านอาหารของคุณ (Your Restaurant)</p>
+          <p className="text-sm text-neutral-500">ย่างยามเย็น</p>
         </div>
 
         <div className="text-sm text-neutral-600 mb-6 space-y-1">

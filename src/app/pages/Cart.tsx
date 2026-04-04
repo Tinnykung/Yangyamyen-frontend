@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
+import { useState, useEffect } from 'react';
 
 export function Cart() {
   const { cart, updateQuantity, removeFromCart, getCartTotal } = useCart();

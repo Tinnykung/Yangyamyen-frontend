@@ -1,35 +1,74 @@
 import { useEffect } from "react";
 import { RouterProvider } from "react-router-dom";
 import { router } from "./routes";
-import { CartProvider, useCart } from "./context/CartContext"; // 🚨 อย่าลืม import useCart
+import { CartProvider, useCart } from "./context/CartContext"; 
 import { Toaster } from "sonner";
+import { supabase } from "../supabase/client"; // 🚨 อย่าลืมเช็ค Path ไฟล์ supabase ของคุณนะครับ
 
-// 🚨 1. สร้าง Component ที่ไม่มีหน้าตา (Hidden Component) เพื่อใช้ดึง URL
 function TableInitializer() {
-  const { setTableNumber } = useCart();
+  const { tableNumber, setTableNumber, setCartItems } = useCart();
 
+  // --- 1. ส่วนดึงเลขโต๊ะจาก URL (โค้ดเดิมของคุณ) ---
   useEffect(() => {
-    // อ่านค่าจาก URL เช่น https://your-web.com/?table=12
     const params = new URLSearchParams(window.location.search);
     const table = params.get('table');
     
     if (table) {
-      setTableNumber(table); // บันทึกเลขโต๊ะลงในระบบทันที
-      
-      // (แนะนำ) ลบพารามิเตอร์ ?table=... ออกจาก URL เพื่อให้ลิงก์ดูสะอาด
-      // และป้องกันลูกค้าก๊อปปี้ลิงก์ไปส่งให้เพื่อนสั่งเล่นจากที่อื่น
+      setTableNumber(table); 
+      localStorage.setItem('tableNumber', table); // บันทึกลงเครื่องเผื่อลูกค้าปิดหน้าจอแล้วเปิดใหม่
       window.history.replaceState(null, '', window.location.pathname);
     }
   }, [setTableNumber]);
 
-  return null; // ไม่ต้อง render อะไรออกมา
+  // --- 2. ส่วน Real-time: ดักสถานะ "Paid" เพื่อเตะออกทันที (ไม่ต้องรีเฟรช) ---
+  useEffect(() => {
+    if (!tableNumber) return; // ถ้าไม่มีเลขโต๊ะ ไม่ต้องดักฟัง
+
+    const checkoutChannel = supabase
+      .channel(`checkout-sync-${tableNumber}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'orders',
+          filter: `table_number=eq.${tableNumber}` // ดักเฉพาะออเดอร์ของโต๊ะนี้
+        },
+        (payload) => {
+          // 🚨 ถ้าพนักงานกดเช็คบิล (สถานะเปลี่ยนเป็น paid)
+          if (payload.new.status === 'paid') {
+            
+            // 1. ล้างข้อมูลในระบบให้เกลี้ยง
+            setTableNumber(''); 
+            setCartItems([]);
+            
+            // 2. ล้างข้อมูลที่เซฟไว้ในเครื่อง
+            localStorage.removeItem('tableNumber');
+            // localStorage.removeItem('cart_storage_key'); // ถ้ามี key ตะกร้าให้ใส่ตรงนี้ด้วยครับ
+
+            // 3. บังคับเด้งกลับหน้าแรกทันที
+            // เนื่องจากเราอยู่ใน Component ที่อยู่นอก RouterProvider 
+            // วิธีที่ชัวร์ที่สุดคือใช้ window.location.origin เพื่อกลับไปหน้าสแกน QR [image_f8c30b.jpg]
+            window.location.href = window.location.origin; 
+            
+            alert('เช็คบิลเรียบร้อยแล้ว ขอบคุณที่ใช้บริการครับ 🙏');
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(checkoutChannel);
+    };
+  }, [tableNumber, setTableNumber, setCartItems]);
+
+  return null;
 }
 
-// 🚨 2. นำ Component ไปใส่ไว้ใน App
 function App() {
   return (
     <CartProvider>
-      <TableInitializer /> {/* ทำงานทันทีที่เว็บโหลด */}
+      <TableInitializer /> 
       <RouterProvider router={router} />
       <Toaster position="top-right" />
     </CartProvider>

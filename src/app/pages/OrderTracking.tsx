@@ -3,6 +3,7 @@ import { Search, AlertCircle, ChefHat, Clock, Utensils, ClipboardList } from 'lu
 import { supabase } from '../../supabase/client';
 import { OrderStatusTracker } from '../components/OrderStatusTracker';
 import { useCart } from '../context/CartContext'; 
+import { useNavigate } from 'react-router-dom';
 
 interface OrderItem {
   id?: string | number;
@@ -22,7 +23,7 @@ interface ActiveOrder {
 export function OrderTracking() {
   // ดึง tableNumber จาก Context
   const { tableNumber: contextTableNumber } = useCart();
-  
+  const navigate = useNavigate();
   const [tableNumber, setTableNumber] = useState('');
   const [searchedTable, setSearchedTable] = useState('');
   const [activeOrders, setActiveOrders] = useState<ActiveOrder[]>([]);
@@ -80,6 +81,18 @@ export function OrderTracking() {
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'orders', filter: `table_number=eq.${searchedTable}` },
         (payload: any) => {
+          if (payload.new.status === 'paid') {
+            // ลบข้อมูลโต๊ะออกจากเครื่อง (เปลี่ยน 'tableNumber' ให้ตรงกับ key ที่คุณใช้เก็บตอนสแกน QR)
+            localStorage.removeItem('tableNumber'); 
+            
+            // เตะกลับหน้าแรก (หน้ายินดีต้อนรับสแกน QR)
+            navigate('/'); 
+            
+            // หากระบบ Context ของคุณมีฟังก์ชัน clear โต๊ะ ให้เรียกใช้ด้วยนะครับ (ถ้ามี)
+            // เช่น clearTable();
+            
+            return; // หยุดการทำงานส่วนอื่นต่อ
+          }
           setActiveOrders(prevOrders => 
             prevOrders.map(order => 
               order.id === payload.new.id ? { ...order, ...payload.new } : order
@@ -100,7 +113,7 @@ export function OrderTracking() {
     return () => {
       supabase.removeChannel(orderSubscription);
     };
-  }, [searchedTable, fetchOrders]);
+  }, [searchedTable, fetchOrders, navigate]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
