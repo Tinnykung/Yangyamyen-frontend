@@ -26,16 +26,16 @@ export function MenuItemCard({ item }: MenuItemCardProps) {
       </div>
       <div className="p-4">
         <div className="mb-2">
-          <h3 className="text-lg font-semibold text-neutral-900">{item.name}</h3>
+          <h3 className="text-sm sm:text-lg font-semibold text-neutral-900">{item.name}</h3>
           <p className="text-sm text-neutral-500 mt-1">{item.description}</p>
         </div>
         <div className="flex items-center justify-between mt-4">
-          <span className="text-xl font-semibold text-amber-700">
+          <span className="text-sm sm:text-lg font-semibold text-amber-700">
             {item.price.toFixed(2)} บาท
           </span>
           <button
             onClick={handleAddToCart}
-            className="bg-amber-700 text-white px-4 py-2 rounded-lg hover:bg-amber-800 transition-colors flex items-center gap-2"
+            className="bg-amber-700 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm hover:bg-amber-800 transition-colors flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
             Add
