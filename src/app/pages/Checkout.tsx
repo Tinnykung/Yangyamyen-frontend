@@ -106,7 +106,12 @@ export function Checkout() {
                   required
                   value={formData.name}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all text-lg"
+                  readOnly={!!tableNumber}
+                  className={`w-full px-4 py-3 border rounded-xl outline-none transition-all text-lg ${
+                    tableNumber 
+                      ? "bg-neutral-100 border-neutral-200 text-neutral-600 font-bold cursor-not-allowed" 
+                      : "bg-white border-neutral-300 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  }`}
                 />
               </div>
             </div>

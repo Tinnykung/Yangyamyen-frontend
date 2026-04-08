@@ -24,6 +24,18 @@ interface Order {
 export function Kitchen() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [notification, setNotification] = useState<string | null>(null);
+  
+  const playKitchenSound = () => {
+    // สามารถเปลี่ยนไฟล์เสียงเป็น bell.mp3 หรือใช้ไฟล์เดิมได้ครับ
+    const audio = new Audio('Apple pay sucess_sound track.mp3'); 
+    audio.play().catch(err => console.log('เล่นเสียงไม่ได้:', err));
+  };
+
+  const showNotification = (message: string) => {
+    setNotification(message);
+    setTimeout(() => setNotification(null), 5000); // แสดง 5 วินาที
+  };
 
   useEffect(() => {
     fetchOrders();
@@ -35,6 +47,11 @@ export function Kitchen() {
         { event: '*', schema: 'public', table: 'orders' },
         (payload) => {
           console.log('🔔 มีอัปเดตจากห้องครัว!', payload);
+          if (payload.eventType === 'INSERT') {
+            const newOrder = payload.new as Order;
+            showNotification(`🔥 มีออเดอร์ใหม่! โต๊ะ ${newOrder.table_number}`);
+            playKitchenSound();
+          }
           fetchOrders();
         }
       )
@@ -132,6 +149,19 @@ export function Kitchen() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+      {/*UI แจ้งเตือนมุมบนขวา (ตั้งค่า top-24 เพื่อไม่ให้ Header บัง) */}
+      {notification && (
+        <div className="fixed top-24 right-8 z-[9999] animate-in fade-in slide-in-from-right-10">
+          <div className="flex items-center gap-3 rounded-2xl bg-orange-600 shadow-2xl border border-orange-500 text-white px-6 py-4">
+            <div>
+              <p className="font-bold text-lg leading-none">ออเดอร์ใหม่!</p>
+              <p className="text-sm opacity-90">{notification}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <h1 className="text-2xl font-bold mb-8 text-neutral-900 border-b pb-4">แผงควบคุมห้องครัว</h1>
 
       {orders.length === 0 ? (
@@ -199,7 +229,7 @@ export function Kitchen() {
                         )}
                       </div>
 
-                      {/* 🚨 แสดงหมายเหตุ (ถ้ามี) ไว้ใต้ชื่อเมนู */}
+                      {/* แสดงหมายเหตุ (ถ้ามี) ไว้ใต้ชื่อเมนู */}
                       {item.note && (
                         <div className={`pl-3 mt-1 text-sm font-medium ${isItemCancelled ? 'text-red-300 line-through' : 'text-orange-600'}`}>
                           ** หมายเหตุ: {item.note}

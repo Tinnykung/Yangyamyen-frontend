@@ -156,7 +156,7 @@ export const menuItems: MenuItem[] = [
     id: 17,
     name: 'เบียร์ช้าง',
     description: '',
-    price: 65,
+    price: 70,
     category: 'เบียร์',
     image: 'https://th.bing.com/th/id/OIP.lFd4iy-78DQr5mtYfgna6wHaHa?o=7rm=3&rs=1&pid=ImgDetMain&o=7&rm=3'
   },
@@ -164,7 +164,7 @@ export const menuItems: MenuItem[] = [
     id: 18,
     name: 'เบียร์ลีโอ',
     description: '',
-    price: 65,
+    price: 70,
     category: 'เบียร์',
     image: 'https://img.wongnai.com/p/1920x0/2019/12/23/4e3849cde879416e862bea602efd718c.jpg'
   },
@@ -172,7 +172,7 @@ export const menuItems: MenuItem[] = [
     id: 16,
     name: 'เบียร์สิงห์',
     description: '',
-    price: 75,
+    price: 80,
     category: 'เบียร์',
     image: 'https://tse4.mm.bing.net/th/id/OIP.LF2ytdhftaJTUwqVyTa4yAHaHa?rs=1&pid=ImgDetMain&o=7&rm=3'
   },
@@ -218,6 +218,22 @@ export const menuItems: MenuItem[] = [
     category: 'สั่งแยก',
     image: 'S__36339748.jpg'
   },
+  {
+    id: 27,
+    name: 'แมงกระพรุน',
+    description: '',
+    price: 70,
+    category: 'สั่งแยก',
+    image: 'S__36610089.jpg'
+  },
+  {
+    id: 28,
+    name: 'ปลาหมึก',
+    description: '',
+    price: 80,
+    category: 'สั่งแยก',
+    image: 'ปลาหมึก.jpg'
+  }
 ];
 
 export const categories = [

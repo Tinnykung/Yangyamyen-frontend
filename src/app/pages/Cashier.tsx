@@ -23,12 +23,6 @@ export function Cashier() {
 
   const [showQRForTable, setShowQRForTable] = useState<string | null>(null);
 
-  // 🔊 ฟังก์ชันเล่นเสียงแจ้งเตือน
-  const playSound = () => {
-    const audio = new Audio('Apple pay sucess_sound track.mp3'); 
-    audio.play().catch(err => console.log('เล่นเสียงไม่ได้ (เบราว์เซอร์อาจบล็อก):', err));
-  };
-
   const playSuccessSound = () => {
     const audio = new Audio('Cash_Money Sound Effect.mp3'); 
     audio.play().catch(err => console.log('เล่นเสียงไม่ได้:', err));
@@ -46,8 +40,6 @@ export function Cashier() {
           // 1. ดักจับตอนมีออเดอร์เข้ามาใหม่ (ของเดิม)
           if (payload.eventType === 'INSERT') {
             const newOrder = payload.new as Order;
-            showNotification(`มีออเดอร์ใหม่จาก โต๊ะ ${newOrder.table_number}!`);
-            playSound();
           }
           
           // 2. เพิ่มใหม่: ดักจับตอนสถานะออเดอร์ถูกอัปเดต
@@ -361,8 +353,11 @@ export function Cashier() {
       </div>
 
       {notification && (
-        <div className="rounded-2xl bg-blue-50 border border-blue-100 text-blue-700 px-4 py-3">
-          {notification}
+        <div className="fixed top-24 right-8 z-[9999] animate-bounce">
+          <div className="flex items-center gap-3 rounded-2xl bg-green-600 shadow-2xl border border-green-500 text-white px-6 py-4">
+            <span className="text-2xl">🔔</span>
+            <span className="font-bold text-lg">{notification}</span>
+          </div>
         </div>
       )}
 
