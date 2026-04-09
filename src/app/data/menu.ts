@@ -218,13 +218,13 @@ export const menuItems: MenuItem[] = [
     category: 'สั่งแยก',
     image: 'S__36339748.jpg'
   },
-  {
+    {
     id: 27,
-    name: 'แมงกระพรุน',
+    name: 'หมูสไลด์',
     description: '',
-    price: 70,
+    price: 80,
     category: 'สั่งแยก',
-    image: 'S__36610089.jpg'
+    image: 'หมูสไลด์.jpg'
   },
   {
     id: 28,
@@ -233,6 +233,14 @@ export const menuItems: MenuItem[] = [
     price: 80,
     category: 'สั่งแยก',
     image: 'ปลาหมึก.jpg'
+  },
+  {
+    id: 29,
+    name: 'แมงกระพรุน',
+    description: '',
+    price: 70,
+    category: 'สั่งแยก',
+    image: 'S__36610089.jpg'
   }
 ];
 
