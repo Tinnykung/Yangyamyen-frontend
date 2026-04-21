@@ -3,7 +3,7 @@ import { RouterProvider } from "react-router-dom";
 import { router } from "./routes";
 import { CartProvider, useCart } from "./context/CartContext"; 
 import { Toaster } from "sonner";
-import { supabase } from "../supabase/client"; // 🚨 อย่าลืมเช็ค Path ไฟล์ supabase ของคุณนะครับ
+import { supabase } from "../supabase/client"; // 
 
 function TableInitializer() {
   const { tableNumber, setTableNumber, setCartItems } = useCart();
