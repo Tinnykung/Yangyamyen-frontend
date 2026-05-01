@@ -72,7 +72,7 @@ export const menuItems: MenuItem[] = [
     id: 25,
     name: 'กุ้งแช่น้ำปลา',
     description: '',
-    price: 80,
+    price: 120,
     category: 'ของทานเล่น',
     image: 'S__36331577.jpg'
   },
